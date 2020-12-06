@@ -7,6 +7,7 @@ class Game {
     size = 0
 
     createGameBoard(size) {
+        this.finished = false;
         this.pieces = []
         this.rooms = []
         this.size = size
