@@ -1,188 +1,147 @@
-// maak een spelbord
-// voeg spelers toe aan het bord
-// wijs een beurt aan de eerste speler
-// laat een speler een muur klikken
-// markeer de muur en kijk of de kamer afgemaakt is
-
-var events = require('events')
-
 class Game {
+    finished = false
+    pieces = []
     rooms = []
     players = []
     currentPlayer = 0
 
     constructor(size) {
-        // Create 2d array of rooms
-        for (let i = 0; i < size; i++) {
-            // i = column index
-            let column = []
-            let columnSharedWalls = []
-            // Create the shared walls for this column
-            for (let j = 0; j < size - 1; j++) {
-                columnSharedWalls.push(new Wall())
-            }
-            for (let k = 0; k < size; k++) {
-                // k = room index
-                if (i == 0) {
-                    // if k 0 bottom
-                    // if k n top bottom (n-1)
-                    //if k last top
-                    // wallTop, wallRight, wallBottom, wallLeft
-                    if (k == 0) {
-                        column.push(
-                            new Room(
-                                new Wall(),
-                                new Wall(),
-                                columnSharedWalls[k],
-                                new Wall(),
-                            ),
-                        )
-                    } else if (k == size - 1) {
-                        column.push(
-                            new Room(
-                                columnSharedWalls[k - 1],
-                                new Wall(),
-                                new Wall(),
-                                new Wall(),
-                            ),
-                        )
-                    } else {
-                        column.push(
-                            new Room(
-                                columnSharedWalls[k - 1],
-                                new Wall(),
-                                columnSharedWalls[k],
-                                new Wall(),
-                            ),
-                        )
-                    }
-                    // console.log("Created room");
-                } else {
-                    const col = this.rooms[i - 1]
-                    const room = col[k]
-                    const wall = room.getWall(1)
-                    if (k == 0) {
-                        column.push(
-                            new Room(
-                                new Wall(),
-                                new Wall(),
-                                columnSharedWalls[k],
-                                wall,
-                            ),
-                        )
-                    } else if (k == size - 1) {
-                        column.push(
-                            new Room(
-                                columnSharedWalls[k - 1],
-                                new Wall(),
-                                new Wall(),
-                                wall,
-                            ),
-                        )
-                    } else {
-                        column.push(
-                            new Room(
-                                columnSharedWalls[k - 1],
-                                new Wall(),
-                                columnSharedWalls[k],
-                                wall,
-                            ),
-                        )
-                    }
-                }
-            }
-            this.rooms.push(column)
-            // console.log(column);
-            // console.log("Created column");
-        }
-        // console.log(this.rooms);
-    }
+        for (let i = 0; i < size * 2 + 1; i++) {
+            let row = []
+            let numberOfWalls = i % 2 == 0 ? size : size + 1
 
-    addPlayer(player) {
-        this.players.push(player)
+            for (let j = 0; j < numberOfWalls; j++) {
+                row.push(new Wall())
+            }
+
+            this.pieces.push(row)
+        }
+
+        console.log(this.pieces)
+
+        for (let i = 0; i < size; i++) {
+            let row = []
+
+            for (let j = 0; j < size; j++) {
+                row.push(
+                    new Room(
+                        this.pieces[i * 2][j], // top
+                        this.pieces[i * 2 + 1][j + 1], // right
+                        this.pieces[i * 2 + 2][j], // bottom
+                        this.pieces[i * 2 + 1][j], // left,
+                        this,
+                    ),
+                )
+            }
+
+            this.rooms.push(row)
+        }
+
+        console.log(this.rooms)
     }
 
     start() {
+        if (this.players.length < 2) {
+            throw new Error('A minimum of two players is required')
+        }
         this.render()
     }
 
     render() {
-        let nameDiv = document.getElementById('name')
-        nameDiv.innerHTML = this.players[this.currentPlayer].name
-
-        // every turn the gameboard gets refreshed
-        let gameboard = document.getElementById('gameboard')
+        document.querySelector('#name').innerHTML = this.players[
+            this.currentPlayer
+        ].name
+        let gameboard = document.querySelector('#gameboard')
         gameboard.innerHTML = ''
+        const rowTemplate = document.querySelector('#row')
+        const roomTemplate = document.querySelector('#room')
 
-        let gameboardHtml = ''
-        // loop through the rows of the gameboard
         for (let i = 0; i < this.rooms.length; i++) {
-            gameboardHtml += "<div class='row'>"
-            // loop throught the elements of the rows and create buttons for each element
-            for (let j = 0; j < this.rooms.length; j++) {
-                gameboardHtml += "<div class='room'>"
-                gameboardHtml +=
-                    "<button class='wall' data-pos='0' data-row='" +
-                    i +
-                    "' data-col='" +
-                    j +
-                    "'> Top </button>"
-                gameboardHtml +=
-                    "<button class='wall' data-pos='1' data-row='" +
-                    i +
-                    "' data-col='" +
-                    j +
-                    "'> Right </button>"
-                gameboardHtml +=
-                    "<button class='wall' data-pos='2' data-row='" +
-                    i +
-                    "' data-col='" +
-                    j +
-                    "'> Bottom </button>"
-                gameboardHtml +=
-                    "<button class='wall' data-pos='3' data-row='" +
-                    i +
-                    "' data-col='" +
-                    j +
-                    "'> Left </button>"
-                gameboardHtml += '</div>'
+            let row = this.rooms[i]
+            let rowInstance = rowTemplate.content.cloneNode(true)
+            let rowElem = rowInstance.querySelector('.row')
+
+            for (let j = 0; j < row.length; j++) {
+                let room = this.rooms[i][j]
+                let roomInstance = roomTemplate.content.cloneNode(true)
+                let roomElem = roomInstance.querySelector('.room')
+
+                roomElem.dataset.row = i
+                roomElem.dataset.col = j
+
+                for (let k = 0; k < room.getWalls().length; k++) {
+                    let wallElem = roomElem.querySelector(`[data-pos='${k}']`)
+                    if (room.getWall(k).getClicked()) {
+                        wallElem.classList.add('active')
+                    }
+                }
+
+                if (room.isComplete() && room.owner != null) {
+                    roomElem.style.background = room.owner.color
+                }
+
+                if (room.isComplete() && room.owner == null) {
+                    console.error('panic')
+                    room.owner = this.players[this.currentPlayer]
+                }
+
+                rowElem.appendChild(roomInstance)
             }
-            gameboardHtml += '</div>'
+
+            gameboard.appendChild(rowInstance)
         }
-        gameboard.innerHTML = gameboardHtml
+
+        this.initEventListeners()
+    }
+
+    initEventListeners() {
+        if (this.finished) return
 
         // get all the buttons
         let buttons = document.querySelectorAll('.wall')
         for (let i = 0; i < buttons.length; i++) {
             // add click listener to each button
             buttons[i].addEventListener('click', () => {
-                console.log(buttons[i].dataset.pos + ' clicked')
-                try {
-                    this.makeMove(
-                        parseInt(buttons[i].dataset.row),
-                        parseInt(buttons[i].dataset.col),
-                        parseInt(buttons[i].dataset.pos),
-                    )
-                } catch (e) {
-                    console.log(e.message)
-                }
+                let data = buttons[i].parentElement.dataset
+                let room = this.rooms[data.row][data.col]
+                this.makeMove(room, parseInt(buttons[i].dataset.pos))
             })
         }
     }
 
-    makeMove(row, col, pos) {
-        console.log(row, col, this.rooms)
-        let room = this.rooms[row][col]
-
-        room.makeMove(pos, this.players[this.currentPlayer])
-        // check if player has won
-        if (this.gameIsFinished()) {
-            // Show in screen
-            console.log('Game has finished!')
-
-            // todo: check winner by sum of owned rooms per players
-        } else {
-            this.nextTurn()
+    makeMove(room, pos) {
+        try {
+            room.makeMove(pos, this.players[this.currentPlayer])
+            // check if player has won
+            if (this.gameIsFinished()) {
+                this.render()
+                this.finished = true
+                // Show in screen
+                console.log('Game has finished!')
+                let names = []
+                let points = []
+                for (let i = 0; i < this.players.length; i++) {
+                    names.push(this.players[i].name)
+                    points.push(this.players[i].points)
+                }
+                alert(
+                    'Final score: ' +
+                        '\n' +
+                        names[0] +
+                        ': ' +
+                        points[0] +
+                        '\n' +
+                        names[1] +
+                        ': ' +
+                        points[1] +
+                        '\n' +
+                        'Refresh page for a new game',
+                )
+            } else {
+                this.nextTurn()
+            }
+        } catch (e) {
+            console.error(e.message)
         }
     }
 
@@ -207,30 +166,49 @@ class Game {
 
         this.render()
     }
-}
 
-class Player {
-    name = ''
+    addPlayer(player) {
+        this.players.push(player)
+    }
 
-    constructor(name) {
-        this.name = name
+    getCurrentPlayer() {
+        return this.players[this.currentPlayer]
     }
 }
 
-class Wall {
+class Player {
+    name = null
+    color = 'red'
+    points = 0
+
+    constructor(name, color) {
+        this.name = name
+        this.color = color
+        this.points = 0
+    }
+
+    addPoint() {
+        this.points = this.points + 1
+    }
+}
+
+class Wall extends EventTarget {
     clicked = false
     eventEmitter = null
 
     constructor() {
+        super()
         this.clicked = false
-        eventEmitter = new events.EventEmitter()
+        // eventEmitter = new events.EventEmitter()
     }
 
     click() {
         if (this.clicked == true) {
             throw new Error('This wall has already been taken')
         }
+
         this.clicked = true
+        this.dispatchEvent(new Event('clicked'))
     }
 
     getClicked() {
@@ -243,41 +221,43 @@ class Room {
     walls = []
 
     // Each room has 4 walls: top right bottom left
-    constructor(wallTop, wallRight, wallBottom, wallLeft) {
+    constructor(wallTop, wallRight, wallBottom, wallLeft, game) {
         this.walls = [wallTop, wallRight, wallBottom, wallLeft]
+
+        for (let i = 0; i < this.walls.length; i++) {
+            this.walls[i].addEventListener('clicked', (e) => {
+                if (this.isComplete()) {
+                    this.owner = game.getCurrentPlayer()
+                    this.owner.addPoint()
+                    console.log(this.owner)
+                }
+            })
+        }
     }
 
     getWall(pos) {
         return this.walls[pos]
     }
 
+    getWalls() {
+        return this.walls
+    }
+
     makeMove(pos, player) {
         // pos 0 = top, 1 = right, 2 = bottom, 3 = left
         this.walls[pos].click()
-
-        if (this.isComplete()) {
-            this.owner = player
-        }
     }
 
     // every checks every element in the array
     // check if all walls are true
     isComplete() {
-        return this.walls.every((wall) => wall.getClicked == true)
+        return this.walls.every((wall) => wall.getClicked() == true)
     }
 }
 
 window.onload = () => {
-    let game = new Game(6)
-
-    game.addPlayer(new Player('Emile'))
-    game.addPlayer(new Player('Willem'))
-
+    let game = new Game(3)
+    game.addPlayer(new Player('Red', 'red'))
+    game.addPlayer(new Player('Blue', 'blue'))
     game.start()
-    //   let r = new Room();
-    //   r.makeMove(0);r.makeMove(1);r.makeMove(2);
-    //   console.log(r.isComplete())
 }
-
-// walls als class maken
-// event emitters

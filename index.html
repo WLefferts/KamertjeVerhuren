@@ -1,16 +1,30 @@
+<!DOCTYPE html>
 <html>
     <head>
-        <style>
-            .row{
-                display: inline-block;
-                }
-        </style>
+        <!-- <meta charset="utf-8"/> -->
+        <!-- <meta http-equiv="content-type" content="text/html; charset=UTF-8" /> -->
+        <link rel="stylesheet" href="style.css">
     </head>
     <body>
         <div id="game">
             <div id="turn">It's <span id="name"></span>'s turn</div>
-            <div id="gameboard"></div>
+            <div id="gameboard">
+
+            </div>
         </div>
+        <template id="room">
+            <div class="room" data-row="" data-col="">
+                <div class="wall top" data-pos="0"></div>
+                <div class="wall right" data-pos="1"></div>
+                <div class="wall bottom" data-pos="2"></div>
+                <div class="wall left" data-pos="3"></div>
+            </div>
+        </template>
+
+        <template id="row">
+            <div class="row"></div>
+        </template>
     </body>
+    <!-- <script src="app.js"></script> -->
     <script src="app.js"></script>
 </html>
