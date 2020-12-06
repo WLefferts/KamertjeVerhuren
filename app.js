@@ -4,8 +4,12 @@ class Game {
     rooms = []
     players = []
     currentPlayer = 0
+    size = 0
 
-    constructor(size) {
+    createGameBoard(size) {
+        this.pieces = []
+        this.rooms = []
+        this.size = size
         for (let i = 0; i < size * 2 + 1; i++) {
             let row = []
             let numberOfWalls = i % 2 == 0 ? size : size + 1
@@ -123,6 +127,7 @@ class Game {
                 for (let i = 0; i < this.players.length; i++) {
                     names.push(this.players[i].name)
                     points.push(this.players[i].points)
+                    this.players[i].points = 0
                 }
                 alert(
                     'Final score: ' +
@@ -133,10 +138,10 @@ class Game {
                         '\n' +
                         names[1] +
                         ': ' +
-                        points[1] +
-                        '\n' +
-                        'Refresh page for a new game',
+                        points[1],
                 )
+                this.createGameBoard(this.size)
+                this.start()
             } else {
                 this.nextTurn()
             }
@@ -256,7 +261,8 @@ class Room {
 }
 
 window.onload = () => {
-    let game = new Game(3)
+    let game = new Game()
+    game.createGameBoard(3)
     game.addPlayer(new Player('Red', 'red'))
     game.addPlayer(new Player('Blue', 'blue'))
     game.start()
