@@ -1,0 +1,59 @@
+.row{
+    display: block;
+    height: 100px;
+}
+
+.room{
+    float: left;
+    width: 100px;
+    height: 100px;
+    position: relative;
+}
+
+.top{
+    background: #999;
+    height: 5px;
+    width: 100px;
+    position: absolute;
+    
+    top: 0;
+    left: 0;
+}
+
+.right{
+    background: #999;
+    height: 100px;
+    width: 5px;
+    position: absolute;
+    
+    top: 0;
+    right: 0;
+}
+
+.bottom{
+    background: #999;
+    height: 5px;
+    width: 100px;
+    position: absolute;
+    
+    bottom: 0;
+    left: 0;
+}
+
+.left{
+    background: #999;
+    height: 100px;
+    width: 5px;
+    position: absolute;
+    
+    top: 0;
+    left: 0;
+}
+
+#room{
+    display: none;
+}
+
+.wall.active{
+    background: #666;
+}
