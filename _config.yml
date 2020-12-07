@@ -1,1 +1,4 @@
 theme: jekyll-theme-cayman
+
+- name: Deploy to GitHub Pages
+  uses: JamesIves/github-pages-deploy-action@3.7.1
